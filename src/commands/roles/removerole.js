@@ -52,11 +52,11 @@ module.exports = {
             } else {
                 user.roles.remove(roleToRemove)
                 const success = new EmbedBuilder()
-                    .setTitle("Role Added")
+                    .setTitle("Role Removed")
                     .setDescription(`✅ Successfully removed ${role} from ${user}`)
                     .setThumbnail(interaction.user.avatarURL())
                     .setTimestamp()
-                    .setColor('#1df028')
+                    .setColor('Red')
                     .setFooter({text: `Command executed by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL()})
 
 
