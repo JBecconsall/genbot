@@ -5,23 +5,23 @@ const ShortUniqueId = require('short-unique-id');
 const {
     CommandType
 } = require('wokcommands');
-const config = require('../../data/config.json')
 const { randomUUID } = new ShortUniqueId({length: 10});
+const config = require('../../data/config.json')
 module.exports = {
     category: 'Moderation',
-    name: 'kick',
-    description: 'Kick a user from the guild',
+    name: 'ban',
+    description: 'Ban a user from the guild',
     type: CommandType.SLASH,
     testOnly: true,
     options: [{
             name: 'user',
-            description: 'The user to kick',
+            description: 'The user to ban',
             required: true,
             type: ApplicationCommandOptionType.User
         },
         {
             name: 'reason',
-            description: 'The reason for kicking the user',
+            description: 'The reason for banning the user',
             required: true,
             type: ApplicationCommandOptionType.String
         },
@@ -37,8 +37,7 @@ module.exports = {
 
         const user = interaction.options.getUser('user');
         const reason = interaction.options.getString('reason');
-        const kickID = randomUUID();
-        const member = interaction.guild.members.cache.get(user.id);
+        const banID = randomUUID();
         const evidence = interaction.options.getString('evidence');
 
         const errorEmbed = new EmbedBuilder()
@@ -48,56 +47,55 @@ module.exports = {
             .setTimestamp()
 
         const success = new EmbedBuilder()
-        .setTitle('User Kicked')
-        .setAuthor({name: user.tag, iconURL: user.displayAvatarURL()})
+        .setTitle('User Banned')
+        .setAuthor({name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL()})
         .setColor('Green')
         .setTimestamp()
         .addFields(
-            {name: 'Member Kicked', value: `${user.tag} \`(${user.id})\``, inline: true},
+            {name: 'Member Banned', value: `${user.tag} \`(${user.id})\``, inline: true},
             {name: 'Reason', value: `${reason}`, inline: true},
-            {name: 'Punishment ID', value: `\`${kickID}\``}
+            {name: 'Punishment ID', value: `\`${banID}\``}
         )
 
         const logEmbed = new EmbedBuilder()
-        .setTitle('User Kicked')
-        .setAuthor({name: user.tag, iconURL: user.displayAvatarURL()})
+        .setTitle('User Banned')
+        .setAuthor({name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL()})
         .setColor('DarkAqua')
         .setTimestamp()
         .addFields(
             {name: 'Offender', value: `<@${user.id}> \`(${user.id})\``, inline: true},
             {name: 'Moderator', value: `<@${interaction.user.id}> \`(${interaction.user.id})\``, inline: true},
             {name: 'Reason', value: `\`${reason}\``},
-            {name: 'Punishment ID', value: `\`${kickID}\``},
-            {name: 'Evidence Link', value: `${evidence}`}
+            {name: 'Punishment ID', value: `\`${banID}\``}
         )
         .setThumbnail(user.displayAvatarURL())
 
         const notifyEmbed = new EmbedBuilder()
         .setTitle('⚠️ Moderation Alert')
-        .setDescription('You have been kicked from the server. Please contact the server owner if you believe this was a mistake.')
+        .setDescription('You have been banned from the server. Please read the rules and do not violate them.')
         .addFields(
             {name: 'Reason', value: `\`${reason}\``, inline: true},
-            {name: 'Punishment ID', value: `\`${kickID}\``}
+            {name: 'Punishment ID', value: `\`${banID}\``}
         )
         .setColor('Red')
         .setTimestamp()
 
-        if (!interaction.member.roles.cache.has(config.PERM_KICK)) { 
+
+        if (!interaction.member.roles.cache.has(config.PERM_BAN)) { 
             interaction.reply({embeds: [errorEmbed], ephemeral: true})
         } else {
 
-            try {
             var date = new Date();
 
-            await member.kick(reason);
-            interaction.reply({embeds: [success], ephemeral: true})
-            await member.send({embeds: [notifyEmbed]})
-
-            let logChannel = interaction.guild.channels.cache.find(c => c.id === config.DATA_MODLOGS)
-            await logChannel.send({embeds: [logEmbed]})
+            await interaction.guild.bans.create(user, {reason: `${interaction.user.tag} - ${reason}`}).then(() => { interaction.reply({embeds: [success], ephemeral: true}) })
+            try {
+                user.send({embeds: [notifyEmbed]})
             } catch (e) {
                 console.log(e)
             }
+
+            let logChannel = interaction.guild.channels.cache.find(c => c.id === config.DATA_MODLOGS)
+            await logChannel.send({embeds: [logEmbed]})
 
         }
 
