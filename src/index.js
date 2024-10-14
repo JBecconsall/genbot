@@ -55,7 +55,7 @@ client.on('ready', async() => {
 
     if(!mongourl) return;
     await mongoose.set('strictQuery', true)
-    await mongoose.connect(mongourl, {dbName: 'GenBot'}|| '')
+    await mongoose.connect(mongourl, {dbName: 'genbot'}|| '')
     
     
     if(mongoose.connect) {
