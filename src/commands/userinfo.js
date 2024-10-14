@@ -73,6 +73,7 @@ module.exports = {
                 value: `${user.bot ? 'Yes' : 'No'}`
             },
         )
+        .setTimestamp()
 
         await interaction.reply({embeds: [embed]})
     }
